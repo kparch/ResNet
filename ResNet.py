@@ -16,11 +16,13 @@ class ResNet(nn.Module):
         super().__init__()
         self.n = n
         self.initial_layer = nn.Conv2d(3, 16, kernel_size=3, padding=1)
+        nn.init.kaiming_normal_(self.initial_layer.weight)
         self.layerBlock1 = ResidualBlocks(16, 16, n)
         self.layerBlock2 = ResidualBlocks(16, 32, n)
         self.layerBlock3 = ResidualBlocks(32, 64, n)
         self.avgpool = nn.AvgPool2d(kernel_size=8)
         self.fc = nn.Linear(64, 10)
+        nn.init.kaiming_normal_(self.fc.weight)
         
     def forward(self, x):
         initial_layer = self.initial_layer(x)
@@ -51,6 +53,9 @@ class ResidualBlock(nn.Module):
             self.max = nn.MaxPool2d(1, stride=self.sub_stride)
         self.conv1 = nn.Conv2d(input_channels, output_channels, kernel_size=3, stride=self.sub_stride, padding=1)
         self.conv2 = nn.Conv2d(output_channels, output_channels, kernel_size=3, padding=1)
+        
+        nn.init.kaiming_normal_(self.conv1.weight, a=0, mode='fan_in', nonlinearity='relu')
+        nn.init.kaiming_normal_(self.conv2.weight, a=0, mode='fan_in', nonlinearity='relu')
         
         
     def forward(self, x):
