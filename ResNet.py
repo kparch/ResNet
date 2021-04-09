@@ -11,18 +11,28 @@ import torch.nn.functional as F
 import numpy as np
 
 class ResNet(nn.Module):
+    """
+    Structure:
+    conv - bn - 3x residualblocks - avgpool - fully connected
+    """
     
     def __init__(self, n):
         super().__init__()
         self.n = n
+        
+        # layers
         self.initial_layer = nn.Conv2d(3, 16, kernel_size=3, padding=1)
         self.bn = nn.BatchNorm2d(16)
-        nn.init.kaiming_normal_(self.initial_layer.weight)
         self.layerBlock1 = ResidualBlocks(16, 16, n)
         self.layerBlock2 = ResidualBlocks(16, 32, n)
         self.layerBlock3 = ResidualBlocks(32, 64, n)
         self.avgpool = nn.AvgPool2d(kernel_size=8)
         self.fc = nn.Linear(64, 10)
+        
+        # initialization
+        nn.init.kaiming_normal_(self.initial_layer.weight)
+        nn.init.constant_(self.bn.weight, 1)
+        nn.init.constant_(self.bn.bias, 0)
         nn.init.kaiming_normal_(self.fc.weight)
         nn.init.constant_(self.fc.bias, 0)
         
@@ -39,12 +49,12 @@ class ResNet(nn.Module):
         return scores
         
         
-class ResidualBlock(nn.Module):
+class ConvBlock(nn.Module):
     """
     Single Residual Block.
     
     Structure:
-    conv - relu - conv - identity - relu
+    conv - bn - relu - conv - bn - identity - relu
     """
     
     def __init__(self, input_channels, output_channels):
@@ -60,6 +70,7 @@ class ResidualBlock(nn.Module):
         self.conv2 = nn.Conv2d(output_channels, output_channels, kernel_size=3, padding=1)
         self.bn2 = nn.BatchNorm2d(output_channels)
         
+        # initialization
         nn.init.kaiming_normal_(self.conv1.weight, a=0, mode='fan_in', nonlinearity='relu')
         nn.init.kaiming_normal_(self.conv2.weight, a=0, mode='fan_in', nonlinearity='relu')
         nn.init.constant_(self.bn1.weight, 1)
@@ -88,15 +99,15 @@ class ResidualBlock(nn.Module):
 
 class ResidualBlocks(nn.Module):
     """
-    Sequence of n Residual Blocks of same structure.
+    Sequence of n Conv Blocks of same structure.
     
     """
     def __init__(self, input_channels, output_channels, n):
         super().__init__()
         #self.n = n
-        blocks = [ResidualBlock(input_channels, output_channels)]
+        blocks = [ConvBlock(input_channels, output_channels)]
         for _ in range(n-1):
-            blocks.append(ResidualBlock(output_channels, output_channels))
+            blocks.append(ConvBlock(output_channels, output_channels))
         self.blocks = nn.Sequential(*blocks)
         
     def forward(self, x):
