@@ -81,7 +81,7 @@ class ConvBlock(nn.Module):
         
     def forward(self, x):
         conv1 = self.conv1(x)
-        bn1 = self.bn2(conv1)
+        bn1 = self.bn1(conv1)
         relu1 = F.relu(bn1)
         residual = self.conv2(relu1)
         bn2 = self.bn2(residual)
