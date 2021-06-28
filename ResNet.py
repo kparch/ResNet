@@ -30,6 +30,7 @@ class ResNet(nn.Module):
         self.fc = nn.Linear(64, 10)
         
         # initialization
+        # TODO: Decide to collect initializations or in a modular fashion
         nn.init.kaiming_normal_(self.initial_layer.weight)
         nn.init.constant_(self.bn.weight, 1)
         nn.init.constant_(self.bn.bias, 0)
@@ -60,6 +61,7 @@ class ConvBlock(nn.Module):
     def __init__(self, input_channels, output_channels):
         super().__init__()
         self.sub_stride = 1
+        # TODO: simplify/clarify construction
         
         # layers for subsampling
         if input_channels != output_channels: 
@@ -118,6 +120,15 @@ class ResidualBlocks(nn.Module):
 
     
 def flatten(x):
+    """
+    Strech out feature map into vector for Linear Layers.
+
+    Inputs:
+    - x: (torch.tensor) feature map to be streched out
+
+    Returns:
+    - x: (torch.tensor) one dimensional tensor
+    """
     N = x.shape[0] 
     return x.view(N, -1) 
 
